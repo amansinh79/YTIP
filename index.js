@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const ytdl = require("ytdl-core")
 const cp = require("child_process")
 const inq = require("inquirer")
