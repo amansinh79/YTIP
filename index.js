@@ -4,6 +4,7 @@ const ytdl = require("ytdl-core")
 const cp = require("child_process")
 const inq = require("inquirer")
 const ytsr = require("ytsr")
+const Speaker = require("speaker")
 
 const searchString = process.argv.slice(2).join(" ")
 
@@ -19,33 +20,28 @@ ytsr(searchString, { limit: 20 }).then(async (result) => {
   ).video.split(" ")[0]
 
   ytdl.getInfo(result.items.find((t) => t.id === video).url).then(async (info) => {
-    const stream = info.formats.filter((t) => t.hasAudio && !t.hasVideo && t.audioQuality === "AUDIO_QUALITY_MEDIUM" && t.container === "mp4")[0]
-    const proc = cp.spawn("ffplay", ["-hide_banner", "-autoexit", stream.url])
+    const { url } = info.formats.filter((t) => t.hasAudio && !t.hasVideo && t.audioQuality === "AUDIO_QUALITY_MEDIUM" && t.container === "mp4")[0]
 
-    console.log(`
-    q, ESC
-    Quit.
-    
-    p, SPC
-    Pause.
-    
-    m
-    Toggle mute.
-    
-    9, 0
-    Decrease and increase volume respectively.
-    
-    /, *
-    Decrease and increase volume respectively.
-     
-    left/right
-    Seek backward/forward 10 seconds.
-    
-    down/up
-    Seek backward/forward 1 minute.
-`)
-
-    proc.stderr.pipe(process.stderr)
-    proc.stdout.pipe(process.stdout)
+    // audioSpeaker(url)
+    electron(url)
   })
 })
+
+function audioSpeaker(url) {
+  const pcm = cp.spawn("ffmpeg", ["-i", `${url}`, "-acodec", "pcm_s16le", "-f", "s16le", "-ac", "2", "-ar", "44100", "-"])
+
+  const speaker = new Speaker({
+    channels: 2, // 2 channels
+    bitDepth: 16, // 16-bit samples
+    sampleRate: 44100, // 44,100 Hz sample rate
+  })
+
+  pcm.stdout.pipe(speaker)
+
+  console.log("Playing...")
+}
+
+function electron(url) {
+  cp.spawn("electron", ["main.js", `${url}`], { cwd: __dirname })
+  console.log("Playing...")
+}

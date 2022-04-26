@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "inquirer": "^8.2.1",
+    "speaker": "^0.5.4",
     "youtube-audio-stream": "^0.3.55",
     "ytdl-core": "^4.11.0",
     "ytsr": "^3.6.0"
@@ -9,10 +10,9 @@
   "description": "",
   "version": "1.0.0",
   "main": "index.js",
-  "bin":{
-    "ytip":"index.js"
+  "bin": {
+    "ytip": "index.js"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
