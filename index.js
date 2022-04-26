@@ -5,6 +5,8 @@ const cp = require("child_process")
 const inq = require("inquirer")
 const ytsr = require("ytsr")
 const Speaker = require("speaker")
+const keypress = require("keypress")
+const Volume = require("pcm-volume")
 
 const searchString = process.argv.slice(2).join(" ")
 
@@ -22,8 +24,10 @@ ytsr(searchString, { limit: 20 }).then(async (result) => {
   ytdl.getInfo(result.items.find((t) => t.id === video).url).then(async (info) => {
     const { url } = info.formats.filter((t) => t.hasAudio && !t.hasVideo && t.audioQuality === "AUDIO_QUALITY_MEDIUM" && t.container === "mp4")[0]
 
-    // audioSpeaker(url)
-    electron(url)
+    // electron(url)
+    audioSpeaker(url)
+
+    console.log("Playing...")
   })
 })
 
@@ -36,9 +40,35 @@ function audioSpeaker(url) {
     sampleRate: 44100, // 44,100 Hz sample rate
   })
 
-  pcm.stdout.pipe(speaker)
+  keypress(process.stdin)
+  let volume = 1
+  const v = new Volume()
+  pcm.stdout.pipe(v)
+  v.pipe(speaker)
 
-  console.log("Playing...")
+  process.stdin.on("keypress", function (ch, key) {
+    if (key && key.name == "up") {
+      volume = volume + 0.1
+      if (volume > 1) {
+        volume = 1
+      }
+      v.setVolume(volume)
+    }
+    if (key && key.name == "down") {
+      volume = volume - 0.1
+      if (volume < 0) {
+        volume = 0
+      }
+      v.setVolume(volume)
+    }
+
+    if (key && key.ctrl && key.name == "c") {
+      process.exit()
+    }
+  })
+
+  process.stdin.setRawMode(true)
+  process.stdin.resume()
 }
 
 function electron(url) {
